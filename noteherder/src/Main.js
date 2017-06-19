@@ -26,6 +26,10 @@ class Main extends Component {
         }
     }
 
+    newNote = () =>{
+        this.refs.noteForm.newForm()
+    }
+
     note = () => {
         if (this.state.id === null) {
             return this.blankNote()
@@ -45,7 +49,7 @@ class Main extends Component {
     render() {
         return (
             <div className="Main">
-                <Sidebar />
+                <Sidebar callbackParent={() => this.newNote()}/>
                 <NoteList notes={this.props.notes} callbackParent={(id) => this.onListClick(id)} />
                 <NoteForm saveNote={this.props.saveNote} notes={this.props.notes} note={() => this.note()} ref="noteForm" />
 

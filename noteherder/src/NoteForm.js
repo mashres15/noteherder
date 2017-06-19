@@ -24,10 +24,17 @@ class NoteForm extends Component {
     )
   }
 
-  // newForm = (ev) => {
-  //   ev.preventDefault()
-  //   this.setState({ note: this.blankNote() })
-  // }
+  blankNote = () => {
+        return {
+            id: null,
+            title: '',
+            body: '',
+        }
+    }
+
+  newForm = () => {
+     this.setState({ note: this.blankNote() })
+  }
 
   render() {
     return (
