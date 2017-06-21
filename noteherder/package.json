@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "firebase": "^4.1.2",
+    "re-base": "^3.0.2",
     "react": "^15.6.0",
-    "react-dom": "^15.6.0"
+    "react-dom": "^15.6.0",
+    "react-router-dom": "^4.1.1",
+    "rebase": "^0.3.0"
   },
   "devDependencies": {
     "react-scripts": "1.0.7"

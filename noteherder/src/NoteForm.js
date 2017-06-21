@@ -1,39 +1,31 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
-import './NoteForm.css';
+import './NoteForm.css'
 
 class NoteForm extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      note: this.props.note(),
-    }
-    this.updateForm = this.updateForm.bind(this)
-  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.match.params.id) {
+      const newId = nextProps.match.params.id
 
-  getUpdate(newNote){
-    this.setState({note: newNote})
-  }
-
-  updateForm(ev) {
-    const note = { ...this.state.note }
-    note[ev.target.name] = ev.target.value
-    this.setState(
-      { note },
-      () => this.props.saveNote(this.state.note)
-    )
-  }
-
-  blankNote = () => {
-        return {
-            id: null,
-            title: '',
-            body: '',
+      if (newId !== this.props.currentNote.id) {
+        const note = nextProps.notes[newId]
+        if (note) {
+          this.props.setCurrentNote(note)
         }
+      }
+    } else if (this.props.currentNote.id) {
+      this.props.resetCurrentNote()
     }
+  }
 
-  newForm = () => {
-     this.setState({ note: this.blankNote() })
+  handleChanges = (ev) => {
+    const note = {...this.props.currentNote}
+    note[ev.target.name] = ev.target.value
+    this.props.saveNote(note)
+  }
+
+  handleRemove = (ev) => {
+    this.props.removeNote(this.props.currentNote)
   }
 
   render() {
@@ -41,20 +33,28 @@ class NoteForm extends Component {
       <div className="NoteForm">
         <form>
           <p>
-            <input type="text"
+            <input
+              type="text"
               name="title"
               placeholder="Title your note"
-              value={this.state.note.title}
-              onChange={this.updateForm} />
+              onChange={this.handleChanges}
+              value={this.props.currentNote.title}
+            />
           </p>
           <p>
-            <textarea name="body"
-              cols="30" rows="10"
+            <textarea
+              name="body"
               placeholder="Just start typing..."
-              value={this.state.note.body}
-              onChange={this.updateForm}>
-            </textarea>
+              onChange={this.handleChanges}
+              value={this.props.currentNote.body}
+            ></textarea>
           </p>
+          <button
+            type="button"
+            onClick={this.handleRemove}
+          >
+            <i className="fa fa-trash-o"></i>
+          </button>
         </form>
       </div>
     )

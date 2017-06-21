@@ -1,61 +1,27 @@
-import React, { Component } from 'react';
+import React from 'react'
+import { Route, Switch } from 'react-router-dom'
 
-import NoteForm from './NoteForm';
-import Sidebar from './Sidebar';
-import NoteList from './NoteList';
 import './Main.css'
+import Sidebar from './Sidebar'
+import NoteList from './NoteList'
+import NoteForm from './NoteForm'
 
-class Main extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            id : null
-        }
-    }
+const Main = (props) => {
+  return (
+    <div className="Main">
+      <Sidebar signOut={props.signOut} />
+      <NoteList notes={props.notes} />
 
-    onListClick = (id) => {
-        this.state.id = id
-        this.note()
-    }
-
-    blankNote = () => {
-        return {
-            id: null,
-            title: '',
-            body: '',
-        }
-    }
-
-    newNote = () =>{
-        this.refs.noteForm.newForm()
-    }
-
-    note = () => {
-        if (this.state.id === null) {
-            return this.blankNote()
-        }
-        else {
-            Object.keys(this.props.notes).map((noteId) => {
-                if (noteId === this.state.id) {
-                    this.refs.noteForm.getUpdate({
-                        id: this.state.id,
-                        title: this.props.notes[noteId].title,
-                        body: this.props.notes[noteId].body,
-                    })
-                }
-            })
-        }
-    }
-    render() {
-        return (
-            <div className="Main">
-                <Sidebar callbackParent={() => this.newNote()}/>
-                <NoteList notes={this.props.notes} callbackParent={(id) => this.onListClick(id)} />
-                <NoteForm saveNote={this.props.saveNote} notes={this.props.notes} note={() => this.note()} ref="noteForm" />
-
-            </div>
-        )
-    }
+      <Switch>
+        <Route path="/notes/:id" render={(navProps) => (
+          <NoteForm {...props} {...navProps} />
+        )} />
+        <Route render={(navProps) => (
+          <NoteForm {...props} {...navProps} />
+        )} />
+      </Switch>
+    </div>
+  )
 }
 
 export default Main

@@ -1,49 +1,145 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
+import { Route, Switch, Redirect } from 'react-router-dom'
 
-import './App.css';
-import Main from './Main';
+import './App.css'
+import Main from './Main'
+import SignIn from './SignIn'
+import base, { auth } from './base'
 
 class App extends Component {
-    constructor() {
-        super()
+  constructor() {
+    super()
 
-        this.state = {
-            notes: {
-                'note-1': {
-                    id: 'note-1',
-                    title: "Citizens of distant epochs",
-                    body: "Sea of Tranquility the ash of stellar alchemy vastness is bearable only through love bits of moving fluff are creatures of the cosmos, consciousness a still more glorious dawn awaits two ghostly white figures in coveralls and helmets are soflty dancing tingling of the spine, concept of the number one brain is the seed of intelligence are creatures of the cosmos?"
-                },
-                'note-2': {
-                    id: 'note-2',
-                    title: "Preserve and cherish that pale blue dot",
-                    body: "network of wormholes a billion trillion the only home we've ever known light years dream of the mind's eye. Intelligent beings!"
-                },
-                'note-3': {
-                    id: 'note-3',
-                    title: "Laws of physics",
-                    body: "Cambrian explosion radio telescope, circumnavigated citizens of distant epochs brain is the seed of intelligence two ghostly white figures in coveralls and helmets are soflty dancing galaxies inconspicuous motes of rock and gas",
-                },
-            },
+    this.state = {
+      notes: {},
+      uid: null,
+      currentNote: this.blankNote(),
+    }
+  }
+
+  componentWillMount() {
+    this.getUserFromLocalStorage()
+    auth.onAuthStateChanged(
+      (user) => {
+        if (user) {
+          this.authHandler(user)
         }
-    }
+      }
+    )
+  }
 
-    saveNote = (note) => {
-        if (!note.id) {
-            note.id = `note-${Date.now()}`
+  getUserFromLocalStorage() {
+    const uid = localStorage.getItem('uid')
+    if (!uid) return
+    this.setState({ uid })
+  }
+
+  syncNotes = () => {
+    this.ref = base.syncState(
+      `notes/${this.state.uid}`,
+      {
+        context: this,
+        state: 'notes',
+      }
+    )
+  }
+
+  saveNote = (note) => {
+    let shouldRedirect = false
+    if (!note.id) {
+      note.id = `note-${Date.now()}`
+      shouldRedirect = true
+    }
+    const notes = {...this.state.notes}
+    notes[note.id] = note
+    this.setState({ notes, currentNote: note })
+    if (shouldRedirect) {
+      this.props.history.push(`/notes/${note.id}`)
+    }
+  }
+
+  removeNote = (note) => {
+    const notes = {...this.state.notes}
+    notes[note.id] = null
+    this.resetCurrentNote()
+    this.setState(
+      { notes },
+      this.props.history.push('/notes')
+    )
+  }
+
+  blankNote = () => {
+    return {
+      id: null,
+      title: '',
+      body: '',
+    }
+  }
+
+  resetCurrentNote = () => {
+    this.setCurrentNote(this.blankNote())
+  }
+
+  signedIn = () => {
+    return this.state.uid
+  }
+
+  authHandler = (userData) => {
+    localStorage.setItem('uid', userData.uid)
+    this.setState(
+      { uid: userData.uid },
+      this.syncNotes
+    )
+  }
+
+  signOut = () => {
+    auth
+      .signOut()
+      .then(
+        () => {
+          this.resetCurrentNote()
+          localStorage.removeItem('uid')
+          this.setState({ uid: null, notes: {} })
+          base.removeBinding(this.ref)
         }
-        const notes = { ...this.state.notes }
-        notes[note.id] = note
-        this.setState({ notes })
+      )
+  }
+
+  setCurrentNote = (note) => {
+    this.setState({ currentNote: note })
+  }
+
+  render() {
+    const noteData = {
+      notes: this.state.notes,
+      currentNote: this.state.currentNote,
+    }
+    const actions = {
+      saveNote: this.saveNote,
+      removeNote: this.removeNote,
+      setCurrentNote: this.setCurrentNote,
+      resetCurrentNote: this.resetCurrentNote,
+      signOut: this.signOut,
     }
 
-    render() {
-        return (
-            <div className="App">
-                <Main notes={this.state.notes} saveNote={this.saveNote}/>
-            </div>
-        );
-    }
+    return (
+      <div className="App">
+        <Switch>
+          <Route path="/notes" render={() => (
+            this.signedIn()
+              ? <Main {...noteData} {...actions} />
+              : <Redirect to="/sign-in" />
+          )} />
+          <Route path="/sign-in" render={() => (
+            !this.signedIn()
+              ? <SignIn />
+              : <Redirect to="/notes" />
+          )} />
+          <Route render={() => <Redirect to="/notes" />} />
+        </Switch>
+      </div>
+    );
+  }
 }
 
 export default App;
